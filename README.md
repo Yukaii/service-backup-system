@@ -152,6 +152,32 @@ make clean             # Clean temporary files
 make quick-install     # Development/testing install
 ```
 
+## 🧮 S3 Backup Cost Estimator
+
+An interactive web tool to estimate S3 backup storage costs based on your lifecycle policy.
+
+- Inputs: daily data growth (MB/GB), per-tier retention days, per-tier $/GB-month
+- Outputs: steady-state capacity and monthly cost by tier, plus a 24‑month ramp‑up chart
+- Notes: storage-only; excludes request/transition/retrieval/data-transfer fees; does not apply tiered pricing
+- Source code: https://github.com/Yukaii/service-backup-system (see `cost/`)
+
+Run locally:
+```bash
+cd cost
+bun install
+bun run dev
+```
+
+Build and preview:
+```bash
+bun run build
+bun run preview
+```
+
+Deployment:
+- Auto-deploys to GitHub Pages from `cost/dist` via `.github/workflows/build-cost.yml`
+- Pages URL is shown in the repository Pages environment once enabled
+
 ## ☁️ S3 Storage Optimization
 
 Configure S3 lifecycle policies to automatically transition backups:

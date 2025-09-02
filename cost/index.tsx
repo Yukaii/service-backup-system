@@ -154,6 +154,21 @@ export default function S3CostEstimator() {
           <div className="text-sm text-gray-600">穩態月費 & 月度爬升模擬（不含請求 / 取回 / 轉層 / 流量費）</div>
         </header>
 
+        <div className="mb-6 rounded-2xl bg-white p-4 shadow text-sm text-gray-700">
+          <p>
+            這個工具用於估算基於 S3 生命週期策略的備份儲存成本。您可以設定每日新增資料量、各階段停留天數與各階層單價，
+            工具會計算穩態的總儲存量與月費，並繪出前 24 個月的費用爬升曲線，協助您預估成本的變化。
+          </p>
+          <a
+            href="https://github.com/Yukaii/service-backup-system"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-2 text-blue-600 hover:underline"
+          >
+            查看原始碼（GitHub）
+          </a>
+        </div>
+
         {/* Controls */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-white p-4 shadow">
