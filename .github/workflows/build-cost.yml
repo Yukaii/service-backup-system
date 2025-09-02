@@ -1,0 +1,38 @@
+name: Build Cost Calculator
+
+on:
+  push:
+    paths:
+      - 'cost/**'
+      - '.github/workflows/build-cost.yml'
+  pull_request:
+    paths:
+      - 'cost/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: ./cost
+        run: bun install
+
+      - name: Build
+        working-directory: ./cost
+        run: bun run build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cost-dist
+          path: cost/dist
+          if-no-files-found: error

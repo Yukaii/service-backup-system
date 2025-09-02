@@ -22,3 +22,7 @@ logs/
 backup-config
 .backup-config
 .backup-ignore
+
+# Cost calculator build artifacts
+cost/node_modules/
+cost/dist/
