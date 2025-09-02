@@ -64,6 +64,10 @@ export SERVICES_DIR="$HOME/Services"            # Services directory
 export ALERT_EMAIL="admin@example.com"          # Email alerts
 export DISCORD_WEBHOOK="https://discord.com..." # Discord notifications
 export SLACK_WEBHOOK="https://hooks.slack.com..." # Slack notifications
+
+# Service Ignore Configuration
+export BACKUP_CONFIG_FILE="$HOME/.backup-ignore"    # Ignore list file
+export BACKUP_IGNORE_SERVICES="service1,service2"   # Comma-separated list
 ```
 
 ### Custom Service Backups
@@ -73,6 +77,25 @@ For services requiring special backup procedures, create a `backup.sh` script in
 cp templates/service-backup-template.sh ~/Services/my-service/backup.sh
 chmod +x ~/Services/my-service/backup.sh
 # Edit as needed
+```
+
+### Ignoring Services
+Skip specific services from backup using either method:
+
+**Method 1: Ignore File (Recommended)**
+```bash
+# Create/edit ignore list
+cat > ~/.backup-ignore << EOF
+# Services to skip
+tolgee
+weblate
+gakuon
+EOF
+```
+
+**Method 2: Environment Variable**
+```bash
+export BACKUP_IGNORE_SERVICES="tolgee,weblate,gakuon"
 ```
 
 ## 🔄 Usage

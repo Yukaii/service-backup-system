@@ -18,6 +18,11 @@ LOG_FILE="${LOG_FILE:-$HOME/logs/backup.log}"
 MAX_RETRIES=3
 RETRY_DELAY=10
 
+# Service ignore list (can be set via environment variable or config file)
+# Format: comma-separated service names (e.g., "service1,service2,service3")
+BACKUP_IGNORE_SERVICES="${BACKUP_IGNORE_SERVICES:-}"
+BACKUP_CONFIG_FILE="${BACKUP_CONFIG_FILE:-$HOME/.backup-ignore}"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -44,6 +49,62 @@ log() {
 # Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# Load ignore list from config file and environment variable
+load_ignore_list() {
+    local ignore_list=""
+    
+    # Load from config file if it exists
+    if [[ -f "$BACKUP_CONFIG_FILE" ]]; then
+        log "INFO" "Loading ignore list from config file: $BACKUP_CONFIG_FILE"
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            # Skip empty lines and comments
+            if [[ -n "$line" ]] && [[ ! "$line" =~ ^[[:space:]]*# ]]; then
+                # Remove leading/trailing whitespace
+                line=$(echo "$line" | xargs)
+                if [[ -n "$ignore_list" ]]; then
+                    ignore_list="$ignore_list,$line"
+                else
+                    ignore_list="$line"
+                fi
+            fi
+        done < "$BACKUP_CONFIG_FILE"
+    fi
+    
+    # Add from environment variable
+    if [[ -n "$BACKUP_IGNORE_SERVICES" ]]; then
+        if [[ -n "$ignore_list" ]]; then
+            ignore_list="$ignore_list,$BACKUP_IGNORE_SERVICES"
+        else
+            ignore_list="$BACKUP_IGNORE_SERVICES"
+        fi
+    fi
+    
+    # Convert to global array
+    if [[ -n "$ignore_list" ]]; then
+        IFS=',' read -ra IGNORE_SERVICES <<< "$ignore_list"
+        # Trim whitespace from each service name
+        for i in "${!IGNORE_SERVICES[@]}"; do
+            IGNORE_SERVICES[i]=$(echo "${IGNORE_SERVICES[i]}" | xargs)
+        done
+        log "INFO" "Services to ignore: ${IGNORE_SERVICES[*]}"
+    else
+        IGNORE_SERVICES=()
+    fi
+}
+
+# Check if a service should be ignored
+is_service_ignored() {
+    local service_name="$1"
+    
+    for ignored_service in "${IGNORE_SERVICES[@]}"; do
+        if [[ "$service_name" == "$ignored_service" ]]; then
+            return 0  # Service should be ignored
+        fi
+    done
+    
+    return 1  # Service should not be ignored
 }
 
 # Check rclone availability and configuration
@@ -154,17 +215,27 @@ backup_configurations() {
     
     local config_backup="$BACKUP_DIR/services-config.tar.gz"
     
+    # Build exclude list for ignored services
+    local tar_excludes=(
+        --exclude='Services/*/data'
+        --exclude='Services/*/logs'
+        --exclude='Services/*/.git'
+        --exclude='Services/*/node_modules'
+        --exclude='Services/*/vendor'
+        --exclude='Services/*/postgres'
+        --exclude='Services/*/library'
+        --warning=no-file-removed
+        --warning=no-file-changed
+    )
+    
+    # Add ignored services to exclude list
+    for ignored_service in "${IGNORE_SERVICES[@]}"; do
+        tar_excludes+=(--exclude="Services/$ignored_service")
+    done
+    
     tar -czf "$config_backup" \
         -C "$HOME" \
-        --exclude='Services/*/data' \
-        --exclude='Services/*/logs' \
-        --exclude='Services/*/.git' \
-        --exclude='Services/*/node_modules' \
-        --exclude='Services/*/vendor' \
-        --exclude='Services/*/postgres' \
-        --exclude='Services/*/library' \
-        --warning=no-file-removed \
-        --warning=no-file-changed \
+        "${tar_excludes[@]}" \
         Services/ 2>/dev/null || {
         log "WARN" "Configuration backup completed with warnings (some files may be inaccessible)"
     }
@@ -325,6 +396,9 @@ main() {
     check_s3_access
     check_docker
     
+    # Load ignore list
+    load_ignore_list
+    
     # Setup
     setup_directories
     
@@ -337,6 +411,14 @@ main() {
     
     for service_path in "$SERVICES_DIR"/*; do
         if [[ -d "$service_path" ]]; then
+            local service_name=$(basename "$service_path")
+            
+            # Check if service should be ignored
+            if is_service_ignored "$service_name"; then
+                log "INFO" "Skipping ignored service: $service_name"
+                continue
+            fi
+            
             total_count=$((total_count + 1))
             if backup_service "$service_path"; then
                 success_count=$((success_count + 1))
