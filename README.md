@@ -6,8 +6,8 @@ A comprehensive, automated backup and maintenance solution for Docker Compose se
 
 ### 1. Clone and Install
 ```bash
-git clone <repository-url>
-cd ykmade-service-backup
+git clone https://github.com/Yukaii/service-backup-system
+cd service-backup-system
 make install
 ```
 
