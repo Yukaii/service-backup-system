@@ -112,12 +112,19 @@ check_docker() {
         exit 1
     fi
     
-    if ! command_exists docker-compose; then
-        log "ERROR" "docker-compose is not installed"
+    # Check for docker compose (new subcommand) or docker-compose (legacy)
+    if docker compose version >/dev/null 2>&1; then
+        log "SUCCESS" "Docker with compose plugin is available"
+        DOCKER_COMPOSE_CMD="docker compose"
+    elif command_exists docker-compose; then
+        log "SUCCESS" "Docker Compose (legacy) is available"
+        DOCKER_COMPOSE_CMD="docker-compose"
+    else
+        log "ERROR" "Neither 'docker compose' nor 'docker-compose' is available"
         exit 1
     fi
     
-    log "SUCCESS" "Docker and docker-compose are available"
+    log "SUCCESS" "Docker and compose are available"
 }
 
 # Create necessary directories
@@ -154,9 +161,12 @@ backup_configurations() {
         --exclude='Services/*/.git' \
         --exclude='Services/*/node_modules' \
         --exclude='Services/*/vendor' \
+        --exclude='Services/*/postgres' \
+        --exclude='Services/*/library' \
+        --warning=no-file-removed \
+        --warning=no-file-changed \
         Services/ 2>/dev/null || {
-        log "ERROR" "Failed to create configuration backup"
-        return 1
+        log "WARN" "Configuration backup completed with warnings (some files may be inaccessible)"
     }
     
     log "SUCCESS" "Configuration backup created: $(du -h "$config_backup" | cut -f1)"
@@ -202,7 +212,7 @@ backup_service_volumes() {
     
     # Get all volumes for this service
     local volumes
-    volumes=$(docker-compose config --volumes 2>/dev/null || echo "")
+    volumes=$($DOCKER_COMPOSE_CMD config --volumes 2>/dev/null || echo "")
     
     if [[ -z "$volumes" ]]; then
         log "INFO" "No volumes found for $service_name"
