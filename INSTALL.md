@@ -38,8 +38,8 @@ For most users, the automated installation is recommended:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/ykmade-service-backup.git
-cd ykmade-service-backup
+git clone https://github.com/your-username/service-backup-system.git
+cd service-backup-system
 ```
 
 ### 2. Run Quick Installation
