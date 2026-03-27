@@ -407,6 +407,9 @@ main() {
     # Load ignore list
     load_ignore_list
     
+    # Reclaim expired local backups before creating a new backup directory.
+    cleanup_local_backups
+    
     # Setup
     setup_directories
     
@@ -448,8 +451,7 @@ main() {
         exit 1
     fi
     
-    # Cleanup and reporting
-    cleanup_local_backups
+    # Reporting
     generate_report
     
     log "SUCCESS" "All backup operations completed"
