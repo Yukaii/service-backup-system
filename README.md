@@ -43,6 +43,27 @@ Place your Docker Compose services in `~/Services/`:
 
 ## 🔧 What Gets Installed
 
+## Persistent Config (cron-safe)
+
+Cron runs with a minimal environment. To ensure scripts read your settings when run manually or via cron, set them in one of these files (read automatically if present):
+
+- `~/.backup-env`
+- `~/.config/service-backup/.env`
+
+Example contents:
+```bash
+# Required
+S3_BUCKET="your-bucket"
+S3_REMOTE="ykmade-backup"
+
+# Optional
+SERVICES_DIR="$HOME/Services"
+BACKUP_CONFIG_FILE="$HOME/.backup-ignore"
+BACKUP_IGNORE_SERVICES="tolgee,weblate"
+ALERT_EMAIL="admin@example.com"
+```
+
+
 The system provides these automated scripts:
 
 - **`backup-all-services.sh`** - Daily automated backups with S3 upload

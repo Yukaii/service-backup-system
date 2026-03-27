@@ -5,6 +5,14 @@
 
 set -euo pipefail
 
+# Load environment overrides from user config files (if present)
+for envfile in "$HOME/.backup-env" "$HOME/.config/service-backup/.env"; do
+    if [[ -f "$envfile" ]]; then
+        # shellcheck source=/dev/null
+        . "$envfile"
+    fi
+done
+
 # Configuration
 SERVICES_DIR="${SERVICES_DIR:-$HOME/Services}"
 S3_BUCKET="${S3_BUCKET:-}"
