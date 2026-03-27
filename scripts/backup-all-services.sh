@@ -366,7 +366,7 @@ cleanup_local_backups() {
         rm -rf "$backup_dir"
         deleted_count=$((deleted_count + 1))
         log "INFO" "Deleted old backup: $(basename "$backup_dir")"
-    done < <(find "$BACKUP_BASE_DIR" -maxdepth 1 -type d -name "*_*" -mtime +3 -print0 2>/dev/null)
+    done < <(find "$BACKUP_BASE_DIR" -maxdepth 1 -type d -name "*_*" -mmin +4320 -print0 2>/dev/null)
     
     if [ $deleted_count -eq 0 ]; then
         log "INFO" "No old backups to clean up"
